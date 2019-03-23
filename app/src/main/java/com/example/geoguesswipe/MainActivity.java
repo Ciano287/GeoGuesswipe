@@ -1,36 +1,34 @@
 package com.example.geoguesswipe;
 
-import android.content.Context;
+
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    private RecyclerView GeoGuessRecyclerView = findViewById(R.id.GeoGuessRecyclerView);
-    List<GeoGuessObject> mGeoObjects = new ArrayList<>();
-    final String POSITIVE_MESSAGE = "Great";
-    final String NEGATIVE_MESSAGE = "Wrong";
+    List<GeoGuessObject> mGeoObjects;
     final int YES = 1;
     final int NO = 0;
-
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        RecyclerView geoGuessRecyclerView = findViewById(R.id.GeoGuessRecyclerView);
+        mGeoObjects = new ArrayList<>();
+
 
         for (int i = 0; i < GeoGuessObject.PRE_DEFINED_GEO_OBJECT_IMAGE_IDS.length; i++) {
 
@@ -38,26 +36,54 @@ public class MainActivity extends AppCompatActivity {
                     GeoGuessObject.PRE_DEFINED_GEO_OBJECT_IMAGE_IDS[i],
                     GeoGuessObject.PRE_DEFINED_GEO_OBJECT_NAMES[i],
                     GeoGuessObject.PRE_DEFINED_YES_OR_NO[i]
-                   ));
+            ));
 
         }
 
-        RecyclerView.LayoutManager mLayoutManager = new StaggeredGridLayoutManager(2, LinearLayoutManager.VERTICAL);
+        RecyclerView.LayoutManager mLayoutManager = new StaggeredGridLayoutManager(1, LinearLayoutManager.VERTICAL);
 
 
-        GeoGuessRecyclerView.setLayoutManager(mLayoutManager);
+        geoGuessRecyclerView.setLayoutManager(mLayoutManager);
 
-        GeoGuessRecyclerView.setHasFixedSize(true);
+        geoGuessRecyclerView.setHasFixedSize(true);
 
-        GeoguessAdapter mAdapter = new GeoguessAdapter(mGeoObjects, this);
+        final GeoguessAdapter mAdapter = new GeoguessAdapter(mGeoObjects);
 
-        GeoGuessRecyclerView.setAdapter(mAdapter);
+        geoGuessRecyclerView.setAdapter(mAdapter);
+        final GestureDetector mGestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener()) {
+
+            public boolean onSingleTapUp(MotionEvent e) {
+                return true;
+            }
+        };
 
 
 
+        geoGuessRecyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
+            @Override
+            public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
+                View child = rv.findChildViewUnder(e.getX(), e.getY());
+                int mAdapterPosition = rv.getChildAdapterPosition(child);
+
+                if (child != null && mGestureDetector.onTouchEvent(e)) {
+                    showCountry(mAdapterPosition);
+                }
+                return false;
+            }
+
+            @Override
+            public void onTouchEvent(@NonNull RecyclerView recyclerView, @NonNull MotionEvent motionEvent) {
+
+            }
+
+            @Override
+            public void onRequestDisallowInterceptTouchEvent(boolean b) {
+
+            }
+        });
 
 
-        ItemTouchHelper.SimpleCallback simpleItemtouchCallBack = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+        final ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
 
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder viewHolder1) {
@@ -69,22 +95,39 @@ public class MainActivity extends AppCompatActivity {
 
                 int position = viewHolder.getAdapterPosition();
 
-                if (checkImage(position, swipeDir)){
-                    Toast.makeText(MainActivity.this, POSITIVE_MESSAGE, Toast.LENGTH_LONG);
+                if (checkImage(position, swipeDir)) {
+                    greatToast();
                 } else {
-                    Toast.makeText(MainActivity.this,NEGATIVE_MESSAGE, Toast.LENGTH_SHORT);
+                    wrongToast();
                 }
+                mGeoObjects.remove(position);
+                mAdapter.notifyItemRemoved(position);
             }
 
-            public boolean checkImage(int i, int swipeDir){
-                if((GeoGuessObject.PRE_DEFINED_YES_OR_NO[i] == YES && swipeDir == ItemTouchHelper.LEFT) ||
-                        (GeoGuessObject.PRE_DEFINED_YES_OR_NO[i] == NO && swipeDir == ItemTouchHelper.RIGHT)){
-                    return true;
-                } else {
-                    return false;
-                }
-            }
+
         };
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
+        itemTouchHelper.attachToRecyclerView(geoGuessRecyclerView);
+    }
+
+    public boolean checkImage(int position, int swipeDir) {
+        GeoGuessObject geo = mGeoObjects.get(position);
+        return (geo.getYesOrNo() == YES && swipeDir == ItemTouchHelper.LEFT) ||
+                (geo.getYesOrNo() == NO && swipeDir == ItemTouchHelper.RIGHT);
+    }
+
+    public void greatToast() {
+        Toast.makeText(MainActivity.this, R.string.great, Toast.LENGTH_LONG).show();
+
+    }
+
+    public void wrongToast() {
+        Toast.makeText(MainActivity.this, R.string.wrong, Toast.LENGTH_SHORT).show();
+    }
+
+    public void showCountry(int position) {
+        Toast.makeText(MainActivity.this, GeoGuessObject.PRE_DEFINED_GEO_OBJECT_NAMES[position]
+                , Toast.LENGTH_SHORT).show();
     }
 }
 
