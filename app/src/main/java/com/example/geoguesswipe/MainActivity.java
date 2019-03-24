@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.view.GestureDetector;
+
 import android.view.MotionEvent;
 import android.view.View;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -29,7 +29,6 @@ public class MainActivity extends AppCompatActivity {
         RecyclerView geoGuessRecyclerView = findViewById(R.id.GeoGuessRecyclerView);
         mGeoObjects = new ArrayList<>();
 
-
         for (int i = 0; i < GeoGuessObject.PRE_DEFINED_GEO_OBJECT_IMAGE_IDS.length; i++) {
 
             mGeoObjects.add(new GeoGuessObject(
@@ -42,37 +41,27 @@ public class MainActivity extends AppCompatActivity {
 
         RecyclerView.LayoutManager mLayoutManager = new StaggeredGridLayoutManager(1, LinearLayoutManager.VERTICAL);
 
-
         geoGuessRecyclerView.setLayoutManager(mLayoutManager);
-
         geoGuessRecyclerView.setHasFixedSize(true);
 
         final GeoguessAdapter mAdapter = new GeoguessAdapter(mGeoObjects);
-
         geoGuessRecyclerView.setAdapter(mAdapter);
-        final GestureDetector mGestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener()) {
-
-            public boolean onSingleTapUp(MotionEvent e) {
-                return true;
-            }
-        };
 
 
 
         geoGuessRecyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
             @Override
             public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
+
                 View child = rv.findChildViewUnder(e.getX(), e.getY());
                 int mAdapterPosition = rv.getChildAdapterPosition(child);
 
-                if (child != null && mGestureDetector.onTouchEvent(e)) {
-                    showCountry(mAdapterPosition);
-                }
+                showCountry(mAdapterPosition);
                 return false;
             }
 
             @Override
-            public void onTouchEvent(@NonNull RecyclerView recyclerView, @NonNull MotionEvent motionEvent) {
+            public void onTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
 
             }
 

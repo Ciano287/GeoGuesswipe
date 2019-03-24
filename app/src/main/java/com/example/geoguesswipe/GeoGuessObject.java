@@ -23,9 +23,6 @@ class GeoGuessObject {
     }
 
 
-    String getGeoName() {
-        return geoName;
-    }
 
 
     final static int[] PRE_DEFINED_GEO_OBJECT_IMAGE_IDS = {
